@@ -25,12 +25,10 @@ export default function HomePageBody() {
   const [showWrapEthModal, setShowWrapEthModal] = useState(false)
   const hideWrapEthModal = () => setShowWrapEthModal(false)
 
-  const compApyFormatted = (compApy / (10 ** 25)).toFixed(2)
-
   const yieldAggAddress =
     chain_id! in addresses ? addresses[chain_id!]["YieldAggregator"][0] : null
 
-  console.log("yieldAggAddress", yieldAggAddress)
+  // console.log("yieldAggAddress", yieldAggAddress)
 
   // @ts-ignore
   const { runContractFunction } = useWeb3Contract()
@@ -51,7 +49,7 @@ export default function HomePageBody() {
 
   const handleWrapEthButtonClick = () => {
     setShowWrapEthModal(true)
-    console.log("Wrapped Eth Clicked")
+    // console.log("Wrapped Eth Clicked")
   }
 
   //************************************** Notificatications ********************************************/
@@ -68,8 +66,6 @@ export default function HomePageBody() {
   }
 
   const handleDepositFailure = async (error: unknown) => {
-    // @ts-ignore
-    // console.log(error.message)
     dispatch({
       type: "info",
       // @ts-ignore
@@ -91,8 +87,6 @@ export default function HomePageBody() {
   }
 
   const handleWithdrawalFailure = async (error: unknown) => {
-    // @ts-ignore
-    // console.log(error.message)
     dispatch({
       type: "info",
       // @ts-ignore
@@ -114,13 +108,11 @@ export default function HomePageBody() {
   }
 
   const handleRebalanceFailure = async (error: unknown) => {
-    // @ts-ignore
-    // console.log(error.message)
     dispatch({
       type: "info",
       // @ts-ignore
       message: `${error.message}`,
-      title: `Rebalance failed - please try again`,
+      title: `No Rebalancing Required`,
       position: "topR",
     })
   }
@@ -203,32 +195,6 @@ export default function HomePageBody() {
 
   const amountInWei = ethToWeiConverter(Number(amountInEth))
 
-  // async function approveAndDepositWeth() {
-  //   console.log("Approving...")
-  //   console.log("amountInWei", amountInWei)
-  //   const options = {
-  //     abi: wethContractAbi,
-  //     contractAddress: wethAddress!,
-  //     functionName: "approve",
-  //     params: {
-  //       spender: yieldAggAddress!,
-  //       value: amountInWei.toString(),
-  //     },
-  //   }
-  //   // const response: boolean = 
-  //   await runContractFunction({
-  //     params: options,
-  //     onSuccess: () => handleApproveSuccess(),
-  //     onError: (error) => console.log(error),
-  //   }) //as boolean
-  //   // console.log("response", response)
-  //   // if (response === true) {
-  //   //   await handleApproveSuccess()
-  //   // } else {
-  //   //   console.log("error response", response)
-  //   // }
-  // }
-
   const { runContractFunction: approveOptions } = useWeb3Contract({
     abi: wethContractAbi,
     contractAddress: wethAddress,
@@ -292,59 +258,89 @@ export default function HomePageBody() {
     })
   }
 
-  // justify-between
+  // 
   return (
-    <div className="flex flex-row pt-10 items-centre px-10">
+    <div className="flex flex-row pt-20 items-centre px-10">
       <div>
         {account ? (
           yieldAggAddress ? (
-            <div className="flex flex-col pl-30">
-              <div className="flex flex-col">
-                <div className="">
-                  <Input
-                    label="Enter the WETH amount to deposit"
-                    name="deposit-weth"
-                    onChange={(event) => {
-                      setAmountInEth(event.target.value)
-                    }}
-                    type="number"
-                  />
-                </div>
-                <div className="px-5 pt-4">
-                  <div>
-                    <Button
-                      id="deposit-button"
-                      onClick={() => approveAndDepositWeth()}
-                      text="Deposit WETH"
-                      theme="colored"
-                      color="blue"
-                      type="button"
+            <div className="flex flex-row justify-between">
+              <div className="flex flex-col pl-40">
+                <div className="flex flex-col">
+                  <div className="">
+                    <Input
+                      label="Enter the WETH amount to deposit"
+                      name="deposit-weth"
+                      onChange={(event) => {
+                        setAmountInEth(event.target.value)
+                      }}
+                      type="number"
                     />
                   </div>
+                  <div className="px-5 pt-4">
+                    <div>
+                      <Button
+                        id="deposit-button"
+                        onClick={() => approveAndDepositWeth()}
+                        text="Deposit WETH"
+                        theme="colored"
+                        color="blue"
+                        type="button"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="px-5 pt-12">
+                  <Button
+                    id="rebalance-button"
+                    onClick={rebalanceWethInProtocol}
+                    text="Rebalance"
+                    theme="colored"
+                    color="green"
+                    type="button"
+                  />
+                </div>
+                <div className="px-5 pt-12">
+                  <Button
+                    id="withdraw-weth"
+                    onClick={withdrawWethFromProtocol}
+                    text="Withdraw WETH"
+                    theme="colored"
+                    color="red"
+                    type="button"
+                  />
                 </div>
               </div>
-              <div className="px-5 pt-12">
-                <Button
-                  id="rebalance-button"
-                  onClick={rebalanceWethInProtocol}
-                  text="Rebalance"
-                  theme="colored"
-                  color="green"
-                  type="button"
-                />
-              </div>
-              <div className="px-5 pt-12">
-                <Button
-                  id="withdraw-weth"
-                  onClick={withdrawWethFromProtocol}
-                  text="Withdraw WETH"
-                  theme="colored"
-                  color="red"
-                  type="button"
-                />
+              <div className="flex flex-col pl-80">
+                <div className="pb-5">
+                  <p>Aave V3 APY: {aaveApy}%</p>
+                  <p>Compound V3 APY: {compApy}%</p>
+                </div>
+                <div>
+                  <p>Balance in Aave: {balanceInAave.toFixed(2)} WETH</p>
+                  <p>Balance in Compound: {balanceInCompound.toFixed(2)} WETH</p>
+                </div>
+                <div className="flex flex-col mt-20">
+                  <div className="pb-3 text-sm">
+                    <p>Please ensure you have sufficient WETH tokens in your wallet. </p>
+                    <p>To get WETH tokens, please click the button below.</p>
+                  </div>
+                  <WrapEthModal
+                    isVisible={showWrapEthModal}
+                    account={account!}
+                    onClose={hideWrapEthModal}
+                  />
+                  <Button
+                    id="wrap-ether"
+                    onClick={handleWrapEthButtonClick}
+                    text="Get WETH Tokens"
+                    theme="colored"
+                    color="blue"
+                    type="button"
+                  />
+                </div>
               </div>
             </div>
-
           ) : (
             <div
               className="bg-orange-100 border-l-4 border-blue-500 text-blue-700 p-8"
@@ -357,38 +353,11 @@ export default function HomePageBody() {
         ) : (
           <div className="bg-orange-100 border-l-4 border-blue-500 text-blue-600 p-20">
             <h1 className="font-bold text-3xl pb-5">
-              Welcome to the Land Administration System!
+              Yield Aggregator for Aave and Compound
             </h1>
             <h2 className="text-2xl">Please connect your wallet!</h2>
           </div>
         )}
-      </div>
-      <div className="flex flex-col pl-80">
-        <div className="pb-5">
-          <p>WETH APY</p>
-          <p>Aave V3 APY: {aaveApy}%</p>
-          <p>Compound V3 APY: {compApy}%</p>
-        </div>
-        <div>
-          <p>WETH Asset</p>
-          <p>Balance in Aave: {balanceInAave.toFixed(2)} WETH</p>
-          <p>Balance in Compound: {balanceInCompound.toFixed(2)} WETH</p>
-        </div>
-        <div className="mt-20">
-          <WrapEthModal
-            isVisible={showWrapEthModal}
-            account={account!}
-            onClose={hideWrapEthModal}
-          />
-          <Button
-            id="wrap-ether"
-            onClick={handleWrapEthButtonClick}
-            text="Get Wrapped Ether"
-            theme="colored"
-            color="blue"
-            type="button"
-          />
-        </div>
       </div>
     </div>
   )
